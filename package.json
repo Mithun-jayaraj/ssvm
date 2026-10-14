@@ -1,0 +1,22 @@
+{
+  "name": "sri-shakthi-vinayaga-metals",
+  "version": "1.0.0",
+  "description": "Sri Shakthi Vinayaga Metals — Premium Temple Products Catalogue & Manufacturer Enquiry Platform",
+  "scripts": {
+    "client": "npm --prefix client run dev",
+    "server": "npm --prefix server run dev",
+    "seed": "npm --prefix server run seed",
+    "build": "npm --prefix client run build"
+  },
+  "keywords": [
+    "temple-products",
+    "prabavalayam",
+    "kalasam",
+    "metalware",
+    "tirupur",
+    "manufacturer",
+    "mern"
+  ],
+  "author": "Sri Shakthi Vinayaga Metals",
+  "license": "ISC"
+}

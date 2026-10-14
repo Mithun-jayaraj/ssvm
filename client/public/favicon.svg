@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Circular sacred emblem background -->
+  <circle cx="32" cy="32" r="30" fill="#4A1424" stroke="#C5A15B" stroke-width="2"/>
+  
+  <!-- Outer Prabha arch radiating aura -->
+  <path d="M18 48 C18 22, 46 22, 46 48" stroke="#C5A15B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <circle cx="32" cy="14" r="3" fill="#C5A15B"/>
+  
+  <!-- Kalasam / Pinnacle central shape -->
+  <path d="M32 20 L35 27 L29 27 Z" fill="#C5A15B"/>
+  <!-- Kalasam pot body -->
+  <ellipse cx="32" cy="33" rx="8" ry="6" fill="#C5A15B"/>
+  <!-- Kalasam base -->
+  <path d="M26 39 H38 L36 43 H28 Z" fill="#C5A15B"/>
+  <!-- Base pedestal -->
+  <rect x="22" y="45" width="20" height="3" rx="1.5" fill="#FAF6ED"/>
+</svg>

@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  
+  body {
+    background-color: #FAF6ED;
+    color: #262321;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6ED;
+}
+::-webkit-scrollbar-thumb {
+  background: #C5A15B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4A1424;
+}
+
+/* Temple & Heritage aesthetic helper utilities */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #C5A15B 0%, #EAD7AC 50%, #B08C3B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #C5A15B 0%, #D4B679 50%, #A8863A 100%);
+}
+
+.maroon-gradient-bg {
+  background: linear-gradient(145deg, #380E1B 0%, #4A1424 50%, #260811 100%);
+}
+
+.border-gold-subtle {
+  border-color: rgba(197, 161, 91, 0.35);
+}
+
+.temple-border-top {
+  border-top: 3px solid #C5A15B;
+  position: relative;
+}
+
+.temple-border-top::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 9px;
+  background-color: #C5A15B;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+/* Delicate subtle texture overlay */
+.bg-temple-pattern {
+  background-color: #FAF6ED;
+  background-image: radial-gradient(rgba(197, 161, 91, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-temple-dark-pattern {
+  background-color: #380E1B;
+  background-image: radial-gradient(rgba(197, 161, 91, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
