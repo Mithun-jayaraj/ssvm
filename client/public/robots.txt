@@ -1,0 +1,15 @@
+# Robots.txt for Sri Shakthi Vinayaga Metals
+# Manufacturer of Traditional Temple Metal Products, Tiruppur, Tamil Nadu, India
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Disallow internal search query combinations to prevent duplicate indexing
+Disallow: /*?search=*
+Disallow: /*?sort=*
+
+# Sitemap location
+Sitemap: https://srishakthivinayagametals.com/sitemap.xml

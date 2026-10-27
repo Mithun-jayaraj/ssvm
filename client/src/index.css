@@ -18,6 +18,47 @@
     font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
     letter-spacing: 0.02em;
   }
+
+  .font-tamil {
+    font-family: 'Noto Sans Tamil', 'Anek Tamil', 'Mukta Malar', system-ui, sans-serif;
+  }
+
+  .font-tamil-serif {
+    font-family: 'Noto Serif Tamil', 'Mukta Malar', Georgia, serif;
+  }
+
+  .font-malayalam {
+    font-family: 'Noto Sans Malayalam', system-ui, sans-serif;
+  }
+
+  .font-telugu {
+    font-family: 'Noto Sans Telugu', system-ui, sans-serif;
+  }
+
+  .font-kannada {
+    font-family: 'Noto Sans Kannada', system-ui, sans-serif;
+  }
+
+  .font-hindi {
+    font-family: 'Noto Sans Devanagari', system-ui, sans-serif;
+  }
+}
+
+/* Language specific font rules when applied to html[lang] */
+html[lang="ta"] body {
+  font-family: 'Noto Sans Tamil', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+html[lang="ml"] body {
+  font-family: 'Noto Sans Malayalam', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+html[lang="te"] body {
+  font-family: 'Noto Sans Telugu', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+html[lang="kn"] body {
+  font-family: 'Noto Sans Kannada', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+html[lang="hi"] body {
+  font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 /* Custom Scrollbar */
@@ -83,3 +124,26 @@
   background-image: radial-gradient(rgba(197, 161, 91, 0.15) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* Smooth Infinite Running Marquee */
+@keyframes running-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-running-marquee {
+  display: flex;
+  width: max-content;
+  animation: running-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-running-marquee:hover,
+.animate-running-marquee:active {
+  animation-play-state: paused;
+}
+

@@ -32,6 +32,7 @@ const AdminProductFormPage = () => {
   // Form State
   const [formData, setFormData] = useState({
     name: '',
+    tamilName: '',
     productCode: '',
     category: '',
     material: 'Brass',
@@ -39,12 +40,20 @@ const AdminProductFormPage = () => {
     weight: '',
     finish: 'Traditional Antique Brass Polish',
     shortDescription: '',
+    tamilShortDescription: '',
     fullDescription: '',
+    tamilFullDescription: '',
     customizationAvailable: true,
     isFeatured: false,
     status: 'published',
     seoTitle: '',
     seoDescription: '',
+    nameTranslations: {
+      ml: '',
+      te: '',
+      kn: '',
+      hi: '',
+    },
   });
 
   const [specifications, setSpecifications] = useState([
@@ -74,6 +83,7 @@ const AdminProductFormPage = () => {
             const p = prodRes.data;
             setFormData({
               name: p.name || '',
+              tamilName: p.tamilName || '',
               productCode: p.productCode || '',
               category: p.category?._id || p.category || '',
               material: p.material || 'Brass',
@@ -81,12 +91,20 @@ const AdminProductFormPage = () => {
               weight: p.weight || '',
               finish: p.finish || 'Traditional Antique Brass Polish',
               shortDescription: p.shortDescription || '',
+              tamilShortDescription: p.tamilShortDescription || '',
               fullDescription: p.fullDescription || '',
+              tamilFullDescription: p.tamilFullDescription || '',
               customizationAvailable: p.customizationAvailable !== false,
               isFeatured: Boolean(p.isFeatured),
               status: p.status || 'published',
               seoTitle: p.seoTitle || '',
               seoDescription: p.seoDescription || '',
+              nameTranslations: {
+                ml: p.nameTranslations?.ml || '',
+                te: p.nameTranslations?.te || '',
+                kn: p.nameTranslations?.kn || '',
+                hi: p.nameTranslations?.hi || '',
+              },
             });
 
             if (Array.isArray(p.specifications)) {
@@ -113,6 +131,16 @@ const AdminProductFormPage = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleTranslationChange = (lang, val) => {
+    setFormData((prev) => ({
+      ...prev,
+      nameTranslations: {
+        ...(prev.nameTranslations || {}),
+        [lang]: val,
+      },
     }));
   };
 
@@ -195,6 +223,11 @@ const AdminProductFormPage = () => {
     try {
       const payload = {
         ...formData,
+        nameTranslations: {
+          ta: formData.tamilName,
+          en: formData.name,
+          ...(formData.nameTranslations || {}),
+        },
         specifications: specifications.filter((s) => s.label.trim() && s.value.trim()),
         imageGallery,
         primaryImage: primaryImage || (imageGallery[0] ? imageGallery[0].url : ''),
@@ -245,9 +278,9 @@ const AdminProductFormPage = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-xs font-semibold text-charcoal mb-1">
-                Product Name <span className="text-red-600">*</span>
+                Product Name (English) <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -257,6 +290,20 @@ const AdminProductFormPage = () => {
                 onChange={handleChange}
                 required
                 className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-charcoal mb-1">
+                தயாரிப்பு பெயர் (Tamil Name)
+              </label>
+              <input
+                type="text"
+                name="tamilName"
+                placeholder="e.g. மகர தோரண பித்தளை பிரபாவளையம்"
+                value={formData.tamilName}
+                onChange={handleChange}
+                className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 font-tamil"
               />
             </div>
 
@@ -343,6 +390,64 @@ const AdminProductFormPage = () => {
               />
             </div>
           </div>
+
+          {/* Multilingual Regional Names (Malayalam, Telugu, Kannada, Hindi) */}
+          <div className="mt-4 pt-4 border-t border-gold-600/20">
+            <h3 className="text-xs font-serif font-bold text-maroon-900 mb-2 flex items-center gap-1.5">
+              <span>🌐</span>
+              <span>Regional Language Names | பிற மொழி பெயர்கள் (ML / TE / KN / HI)</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gold-50/50 p-3 rounded-lg border border-gold-600/30">
+              <div>
+                <label className="block text-[11px] font-semibold text-charcoal mb-1">
+                  മലയാളം (Malayalam Name)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. പ്രഭാവലയം"
+                  value={formData.nameTranslations?.ml || ''}
+                  onChange={(e) => handleTranslationChange('ml', e.target.value)}
+                  className="w-full bg-white border border-gold-600/40 rounded-lg px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-charcoal mb-1">
+                  తెలుగు (Telugu Name)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. ప్రభావళి"
+                  value={formData.nameTranslations?.te || ''}
+                  onChange={(e) => handleTranslationChange('te', e.target.value)}
+                  className="w-full bg-white border border-gold-600/40 rounded-lg px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-charcoal mb-1">
+                  ಕನ್ನಡ (Kannada Name)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. ಪ್ರಭಾವಳಿ"
+                  value={formData.nameTranslations?.kn || ''}
+                  onChange={(e) => handleTranslationChange('kn', e.target.value)}
+                  className="w-full bg-white border border-gold-600/40 rounded-lg px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-charcoal mb-1">
+                  हिन्दी (Hindi Name)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. प्रभावली"
+                  value={formData.nameTranslations?.hi || ''}
+                  onChange={(e) => handleTranslationChange('hi', e.target.value)}
+                  className="w-full bg-white border border-gold-600/40 rounded-lg px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Card 2: Descriptions */}
@@ -351,31 +456,61 @@ const AdminProductFormPage = () => {
             2. Descriptions & Text
           </h2>
 
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1">
-              Short Description (Card summary)
-            </label>
-            <input
-              type="text"
-              name="shortDescription"
-              placeholder="Brief 1-2 sentence overview for catalogue cards"
-              value={formData.shortDescription}
-              onChange={handleChange}
-              className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-charcoal mb-1">
+                Short Description (English)
+              </label>
+              <input
+                type="text"
+                name="shortDescription"
+                placeholder="Brief 1-2 sentence overview for catalogue cards"
+                value={formData.shortDescription}
+                onChange={handleChange}
+                className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-charcoal mb-1">
+                சுருக்க விளக்கம் (Tamil Short Description)
+              </label>
+              <input
+                type="text"
+                name="tamilShortDescription"
+                placeholder="அட்டைப் பார்வைக்கான சுருக்கமான 1-2 வரிகள்"
+                value={formData.tamilShortDescription}
+                onChange={handleChange}
+                className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 font-tamil"
+              />
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-charcoal mb-1">
-              Full Product Description
+              Full Product Description (English)
             </label>
             <textarea
               name="fullDescription"
-              rows={4}
+              rows={3}
               placeholder="Comprehensive details on iconographic carving, Agama compliance, materials, and temple installation..."
               value={formData.fullDescription}
               onChange={handleChange}
               className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+            ></textarea>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-charcoal mb-1">
+              விரிவான விளக்கம் (Tamil Full Description)
+            </label>
+            <textarea
+              name="tamilFullDescription"
+              rows={3}
+              placeholder="சிற்பக்கலை, ஆகம விதிமுறைகள், உலோகம் மற்றும் ஆலய பயன்பாடு குறித்த விரிவான விளக்கம்..."
+              value={formData.tamilFullDescription}
+              onChange={handleChange}
+              className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 font-tamil"
             ></textarea>
           </div>
         </div>

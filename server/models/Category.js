@@ -8,6 +8,19 @@ const categorySchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    tamilName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    nameTranslations: {
+      ta: { type: String, default: '' },
+      en: { type: String, default: '' },
+      ml: { type: String, default: '' },
+      te: { type: String, default: '' },
+      kn: { type: String, default: '' },
+      hi: { type: String, default: '' },
+    },
     slug: {
       type: String,
       required: true,
@@ -19,6 +32,19 @@ const categorySchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    tamilDescription: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    descriptionTranslations: {
+      ta: { type: String, default: '' },
+      en: { type: String, default: '' },
+      ml: { type: String, default: '' },
+      te: { type: String, default: '' },
+      kn: { type: String, default: '' },
+      hi: { type: String, default: '' },
     },
     image: {
       type: String,

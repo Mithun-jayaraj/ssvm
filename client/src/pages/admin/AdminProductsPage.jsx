@@ -186,26 +186,26 @@ const AdminProductsPage = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FAF6ED] text-charcoal-muted font-semibold uppercase tracking-wider text-[11px] border-b border-gold-600/20">
               <tr>
-                <th className="py-3 px-4">Item</th>
-                <th className="py-3 px-4">Code</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4">Material</th>
-                <th className="py-3 px-4">Dimensions</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">பொருள் | Item</th>
+                <th className="py-3 px-4">குறியீடு | Code</th>
+                <th className="py-3 px-4">பிரிவு | Category</th>
+                <th className="py-3 px-4">உலோகம் | Material</th>
+                <th className="py-3 px-4">அளவுகள் | Dimensions</th>
+                <th className="py-3 px-4">நிலை | Status</th>
+                <th className="py-3 px-4 text-right">செயல்கள் | Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gold-600/10">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-charcoal-muted">
-                    Loading products catalogue...
+                    தயாரிப்புகள் ஏற்றப்படுகின்றன... | Loading products catalogue...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-charcoal-muted">
-                    No products found matching the criteria.
+                    தயாரிப்புகள் எதுவும் கிடைக்கவில்லை | No products found matching criteria.
                   </td>
                 </tr>
               ) : (
@@ -213,7 +213,7 @@ const AdminProductsPage = () => {
                   const thumb =
                     p.primaryImage ||
                     p.imageGallery?.[0]?.url ||
-                    'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?auto=format&fit=crop&w=150&q=80';
+                    '/images/cat_brass_lamps.jpg';
 
                   return (
                     <tr key={p._id} className="hover:bg-beige-light/30 transition-colors">
@@ -225,13 +225,18 @@ const AdminProductsPage = () => {
                             className="w-12 h-12 rounded object-cover border border-gold-600/20 shrink-0"
                           />
                           <div>
-                            <span className="font-serif font-bold text-charcoal block line-clamp-1">
+                            {p.tamilName && (
+                              <span className="font-tamil font-bold text-xs text-[#8B1E28] block line-clamp-1">
+                                {p.tamilName}
+                              </span>
+                            )}
+                            <span className="font-serif font-bold text-xs text-charcoal block line-clamp-1">
                               {p.name}
                             </span>
                             {p.isFeatured && (
                               <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300 font-semibold inline-flex items-center gap-1 mt-0.5">
                                 <Sparkles className="w-3 h-3" />
-                                <span>Featured</span>
+                                <span>சிறப்பு | Featured</span>
                               </span>
                             )}
                           </div>

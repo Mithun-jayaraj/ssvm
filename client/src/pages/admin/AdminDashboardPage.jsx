@@ -79,10 +79,10 @@ const AdminDashboardPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif font-bold text-2xl text-maroon-950">
-            Overview Dashboard
+            டாஷ்போர்டு | Overview Dashboard
           </h1>
           <p className="text-xs text-charcoal-muted mt-1">
-            Real-time status of temple metalware products, categories, and customer quotation requests.
+            தயாரிப்புகள், வகைகள் மற்றும் விலைப்புள்ளி விசாரணைகளின் மேலோட்டம் | Real-time status of temple metalware products and enquiries.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ const AdminDashboardPage = () => {
             className="px-4 py-2 bg-white border border-gold-600/40 text-charcoal hover:bg-beige text-xs font-semibold rounded-lg flex items-center gap-2 shadow-xs transition-colors"
           >
             <Download className="w-3.5 h-3.5 text-gold-700" />
-            <span>Export CSV</span>
+            <span>பதிவிறக்கம் | Export CSV</span>
           </button>
 
           <Link
@@ -101,7 +101,7 @@ const AdminDashboardPage = () => {
             className="px-4 py-2 bg-maroon-800 hover:bg-maroon-900 text-gold-300 text-xs font-semibold rounded-lg flex items-center gap-2 shadow transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add New Product</span>
+            <span>புதிய தயாரிப்பு சேர் | Add Product</span>
           </Link>
         </div>
       </div>
@@ -112,13 +112,13 @@ const AdminDashboardPage = () => {
         <div className="bg-white p-5 rounded-xl border border-gold-600/30 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs text-charcoal-muted font-medium block">
-              Published Products
+              வெளியிடப்பட்ட தயாரிப்புகள் | Published Products
             </span>
             <span className="font-serif font-bold text-2xl text-charcoal mt-1 block">
               {metrics?.publishedProductsCount || 0}
             </span>
             <span className="text-[11px] text-emerald-700 mt-0.5 block">
-              Active in public catalogue
+              நேரலையில் உள்ளவை | Active in catalogue
             </span>
           </div>
           <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
@@ -129,12 +129,14 @@ const AdminDashboardPage = () => {
         {/* Draft Products */}
         <div className="bg-white p-5 rounded-xl border border-gold-600/30 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs text-charcoal-muted font-medium block">Draft Products</span>
+            <span className="text-xs text-charcoal-muted font-medium block">
+              வரைவு தயாரிப்புகள் | Draft Products
+            </span>
             <span className="font-serif font-bold text-2xl text-charcoal mt-1 block">
               {metrics?.draftProductsCount || 0}
             </span>
             <span className="text-[11px] text-charcoal-muted mt-0.5 block">
-              Unpublished / In preparation
+              தயாரிப்பில் உள்ளவை | In preparation
             </span>
           </div>
           <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
@@ -145,11 +147,15 @@ const AdminDashboardPage = () => {
         {/* New Enquiries */}
         <div className="bg-white p-5 rounded-xl border border-gold-600/30 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs text-charcoal-muted font-medium block">New Enquiries</span>
+            <span className="text-xs text-charcoal-muted font-medium block">
+              புதிய விசாரணைகள் | New Enquiries
+            </span>
             <span className="font-serif font-bold text-2xl text-blue-800 mt-1 block">
               {metrics?.newEnquiriesCount || 0}
             </span>
-            <span className="text-[11px] text-blue-600 mt-0.5 block">Awaiting first contact</span>
+            <span className="text-[11px] text-blue-600 mt-0.5 block">
+              தொடர்புக்கு காத்திருப்பவை | Awaiting contact
+            </span>
           </div>
           <div className="w-11 h-11 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
             <Inbox className="w-6 h-6" />
@@ -160,13 +166,13 @@ const AdminDashboardPage = () => {
         <div className="bg-white p-5 rounded-xl border border-gold-600/30 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs text-charcoal-muted font-medium block">
-              Quotation Pipeline
+              விலைப்புள்ளி தயாரிப்பில் | Quotation Pipeline
             </span>
             <span className="font-serif font-bold text-2xl text-maroon-900 mt-1 block">
               {metrics?.pendingQuotationCount || 0}
             </span>
             <span className="text-[11px] text-maroon-700 mt-0.5 block">
-              Enquiries under calculation
+              விலை கணக்கீட்டில் உள்ளவை | Under calculation
             </span>
           </div>
           <div className="w-11 h-11 rounded-lg bg-maroon-50 text-maroon-800 flex items-center justify-center">

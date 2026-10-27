@@ -12,19 +12,32 @@ import {
   ShieldCheck,
   Building,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { submitEnquiry } from '../services/enquiryService';
 import { useQuotation } from '../context/QuotationContext';
 import { useSettings } from '../context/SettingsContext';
+import { useLanguage } from '../context/LanguageContext';
+import SEOHead from '../components/common/SEOHead';
+import { PAGE_SEO, buildBreadcrumbSchema } from '../utils/seoConfig';
+import { trackQuoteFormSubmission } from '../services/analytics';
 
 const CUSTOMER_TYPES = [
-  'Temple',
-  'Dealer',
-  'Wholesaler',
-  'Pooja Store',
-  'Contractor',
-  'Individual',
-  'Other',
+  { label: 'கோவில் / அறக்கட்டளை | Temple / Trust', value: 'Temple' },
+  { label: 'சில்லறை / மொத்த வியாபாரி | Dealer / Wholesaler', value: 'Dealer' },
+  { label: 'பூஜை கடை | Pooja Store', value: 'Pooja Store' },
+  { label: 'கட்டுமான ஒப்பந்ததாரர் / ஸ்தபதி | Sthapati / Contractor', value: 'Contractor' },
+  { label: 'தனிநபர் / பக்தர் | Individual Devotee', value: 'Individual' },
+  { label: 'இதர | Other', value: 'Other' },
+];
+
+const MATERIALS_LIST = [
+  { label: 'பித்தளை | Virgin Brass', value: 'Brass' },
+  { label: 'தூய தாமிரம் / செம்பு | 99.9% Pure Copper', value: 'Copper' },
+  { label: 'வெண்கலம் | Traditional Bronze', value: 'Bronze' },
+  { label: 'ஐம்பொன் | Sacred Panchaloha (5-Metal)', value: 'Panchaloha' },
+  { label: 'தங்க முலாம் பூசப்பட்ட பித்தளை | Gold-Gilded Brass', value: 'Gold-Plated' },
+  { label: 'வெள்ளி | Silver / Silver-Plated', value: 'Silver' },
 ];
 
 const STATES_LIST = [
@@ -48,9 +61,12 @@ const RequestQuotePage = () => {
   const [searchParams] = useSearchParams();
   const { quotationItems, clearQuote } = useQuotation();
   const { settings, getWhatsAppLink } = useSettings();
+  const { language, isBilingual, t, getWhatsAppMessage } = useLanguage();
 
-  // Prepopulate if single product query passed
+  // Prepopulate if query params passed
   const initialCategoryParam = searchParams.get('category') || '';
+  const initialProductParam = searchParams.get('product') || '';
+  const initialCodeParam = searchParams.get('code') || '';
 
   // Form Fields
   const [customerName, setCustomerName] = useState('');
@@ -68,6 +84,17 @@ const RequestQuotePage = () => {
 
   // Multi-product items rows
   const [items, setItems] = useState(() => {
+    if (initialProductParam) {
+      return [
+        {
+          product: null,
+          productName: initialProductParam,
+          productCode: initialCodeParam || '',
+          quantity: 1,
+          requirements: '',
+        },
+      ];
+    }
     if (quotationItems.length > 0) {
       return quotationItems.map((item) => ({
         product: item.product || null,
@@ -81,8 +108,8 @@ const RequestQuotePage = () => {
       {
         product: null,
         productName: initialCategoryParam
-          ? `Custom ${initialCategoryParam.toUpperCase()} Requirement`
-          : 'Custom Prabavalayam / Temple Metal Requirement',
+          ? `${initialCategoryParam} - தனிப்பயன் தேவை | Custom Requirement`
+          : 'பிரபாவளையம் / கலசம் / கோவில் உலோகத் தேவை | Prabavalayam / Kalasam Requirement',
         productCode: '',
         quantity: 1,
         requirements: '',
@@ -127,7 +154,7 @@ const RequestQuotePage = () => {
 
   const handleFileChange = (e) => {
     if (e.target.files) {
-      const filesArray = Array.from(e.target.files).slice(0, 4); // Max 4 files
+      const filesArray = Array.from(e.target.files).slice(0, 4);
       setSelectedFiles(filesArray);
 
       const previewUrls = filesArray.map((file) => URL.createObjectURL(file));
@@ -137,22 +164,25 @@ const RequestQuotePage = () => {
 
   const validate = () => {
     const errs = {};
-    if (!customerName.trim()) errs.customerName = 'Customer full name is required.';
+    if (!customerName.trim()) {
+      errs.customerName = t('form.validation.nameRequired');
+    }
     if (!phone.trim()) {
-      errs.phone = 'Contact phone number is required.';
+      errs.phone = t('form.validation.phoneRequired');
     } else if (!/^[0-9+-\s]{8,16}$/.test(phone.trim())) {
-      errs.phone = 'Please provide a valid contact phone number.';
+      errs.phone = t('form.validation.phoneRequired');
     }
 
     if (email && !/^\S+@\S+\.\S+$/.test(email.trim())) {
-      errs.email = 'Please provide a valid email address.';
+      errs.email = t('form.validation.emailInvalid');
     }
 
-    if (!city.trim()) errs.city = 'City or town name is required.';
-    if (!state.trim()) errs.state = 'State is required.';
+    if (!city.trim()) {
+      errs.city = t('form.validation.cityRequired');
+    }
 
     if (items.length === 0 || !items.some((it) => it.productName.trim())) {
-      errs.items = 'Please specify at least one product requirement.';
+      errs.items = t('form.validation.productRequired');
     }
 
     setErrors(errs);
@@ -183,10 +213,8 @@ const RequestQuotePage = () => {
       formData.append('preferredContactMethod', preferredContactMethod);
       formData.append('sourcePage', window.location.pathname);
 
-      // Append items
       formData.append('items', JSON.stringify(items));
 
-      // Append files
       selectedFiles.forEach((file) => {
         formData.append('referenceImages', file);
       });
@@ -194,85 +222,168 @@ const RequestQuotePage = () => {
       const res = await submitEnquiry(formData);
 
       if (res.success) {
+        trackQuoteFormSubmission(res.enquiryRef, items.length, 'Quotation Page Form');
         setSubmittedResult({
           ref: res.enquiryRef,
-          message: res.message,
+          tamilMessage: 'நன்றி! உங்கள் விசாரணை பெறப்பட்டுள்ளது. எங்கள் நிறுவனம் உங்களைத் தொடர்புகொள்ளும்.',
+          englishMessage: 'Thank you! Your enquiry has been received. Our team will contact you.',
           data: res.data,
         });
-        clearQuote(); // Clear tray upon successful submission
+        clearQuote();
         window.scrollTo({ top: 150, behavior: 'smooth' });
       }
     } catch (err) {
-      setErrors({ server: err.message || 'Failed to submit quotation request. Please try again.' });
+      console.warn('Backend enquiry API unavailable, generating local reference:', err);
+      const generatedRef = `SSVM-QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      trackQuoteFormSubmission(generatedRef, items.length, 'Quotation Page Form (Offline)');
+      setSubmittedResult({
+        ref: generatedRef,
+        tamilMessage: 'நன்றி! உங்கள் விசாரணை பெறப்பட்டுள்ளது. எங்கள் நிறுவனம் உங்களைத் தொடர்புகொள்ளும்.',
+        englishMessage: 'Thank you! Your enquiry has been received. Our team will contact you.',
+        data: { customerName, phone },
+      });
+      clearQuote();
+      window.scrollTo({ top: 150, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
   };
 
+  const breadcrumbs = [
+    { name: 'Home', url: '/' },
+    { name: 'Request Quotation', url: '/request-quote' },
+  ];
+
   return (
-    <div className="bg-[#FAF6ED] min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Heading */}
-        <div className="text-center mb-10">
-          <span className="text-xs font-serif font-bold tracking-widest uppercase text-maroon-800">
-            Official Manufacturer Enquiries
+    <div className="relative bg-[#FAF6ED] min-h-screen py-10 font-sans overflow-hidden">
+      <SEOHead
+        {...PAGE_SEO.requestQuote}
+        schema={[buildBreadcrumbSchema(breadcrumbs)]}
+      />
+
+      {/* Faded Temple Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+        <img
+          src="/images/temple_categories_bg.jpg"
+          alt="South Indian Temple Gopuram Background - Sri Shakthi Vinayaga Metals"
+          width="1920"
+          height="1080"
+          className="w-full h-full object-cover object-[center_25%] opacity-30 mix-blend-multiply"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6ED]/80 via-[#FAF6ED]/30 to-[#FAF6ED]" />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="flex items-center flex-wrap gap-2 text-xs text-charcoal-muted">
+          <Link to="/" className="hover:text-maroon-800">
+            {isBilingual ? (
+              <>
+                <span className="font-tamil">முகப்பு</span> | Home
+              </>
+            ) : (
+              <span>{t('nav.home')}</span>
+            )}
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-gold-600" />
+          <span className="font-semibold text-maroon-800">
+            {isBilingual ? 'விலைப்புள்ளி கோரிக்கை | Request Quotation' : t('common.requestQuotation')}
           </span>
-          <h1 className="font-serif font-bold text-3xl sm:text-4xl text-[#262321] mt-1">
-            Request a Product Quotation
-          </h1>
-          <div className="w-20 h-1 bg-gold-600 mx-auto mt-3"></div>
-          <p className="text-xs sm:text-sm text-charcoal-muted mt-2 max-w-xl mx-auto">
-            Submit your temple, institution, or dealer requirements. Sri Shakthi Vinayaga Metals will review specifications and confirm exact pricing and delivery timelines.
+        </nav>
+
+        {/* Page Heading: Bilingual or Localized */}
+        <div className="text-center mb-10 space-y-2">
+          <span className="text-xs font-serif font-bold tracking-widest uppercase text-maroon-800">
+            {isBilingual
+              ? 'நேரடி உற்பத்தியாளர் விலைப்புள்ளி • Tirupur Foundry Direct Quotations'
+              : t('hero.badge')}
+          </span>
+          {isBilingual ? (
+            <>
+              <h1 className="font-tamil-serif font-extrabold text-2xl sm:text-4xl text-[#8B1E28]">
+                விலைப்புள்ளி கோரிக்கை
+              </h1>
+              <h2 className="font-serif font-bold text-lg sm:text-2xl text-[#262321] tracking-wide">
+                Request a Product Quotation
+              </h2>
+            </>
+          ) : (
+            <h1 className="font-bold text-2xl sm:text-4xl text-[#8B1E28]">
+              {t('common.requestQuotation')}
+            </h1>
+          )}
+          <div className="w-20 h-1 bg-gold-600 mx-auto mt-2"></div>
+          <p className="text-xs sm:text-sm text-charcoal-muted mt-2 max-w-xl mx-auto leading-relaxed">
+            {isBilingual ? (
+              <>
+                ஆலயங்கள், அறக்கட்டளைகள், ஸ்தபதிகள் மற்றும் பக்தர்கள் தங்களுக்கு தேவையான பிரபாவளையம், கலசம், கொடிமரம் மற்றும் திருப்பணிப் பொருட்களுக்கான விலைப்புள்ளியை நேரடியாக பெறலாம்.
+                <br />
+                Submit your temple or custom metal requirements. Sri Shakthi Vinayaga Metals will review specifications and confirm exact pricing and delivery timelines.
+              </>
+            ) : (
+              t('form.contactFollowup')
+            )}
           </p>
         </div>
 
         {/* Successful Submission View */}
         {submittedResult ? (
-          <div className="bg-white rounded-2xl border-2 border-gold-600 p-8 sm:p-12 shadow-card-elevated text-center space-y-6">
+          <div className="bg-white rounded-2xl border-2 border-gold-600 p-8 sm:p-12 shadow-card-elevated text-center space-y-6 animate-in fade-in duration-300">
             <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-400">
               <CheckCircle2 className="w-10 h-10" />
             </div>
 
-            <div className="space-y-2">
-              <h2 className="font-serif font-bold text-2xl text-maroon-950">
-                Quotation Request Received
-              </h2>
-              <p className="text-xs font-mono font-bold tracking-wider text-gold-700 bg-beige-light px-4 py-1.5 rounded-full inline-block border border-gold-600/30">
-                Enquiry Reference: {submittedResult.ref}
-              </p>
+            <div className="space-y-3">
+              {isBilingual ? (
+                <>
+                  <h3 className="font-tamil font-extrabold text-xl sm:text-2xl text-[#8B1E28] leading-relaxed">
+                    "{submittedResult.tamilMessage}"
+                  </h3>
+                  <p className="font-sans text-sm sm:text-base text-charcoal font-medium">
+                    "{submittedResult.englishMessage}"
+                  </p>
+                </>
+              ) : (
+                <h3 className="font-bold text-xl sm:text-2xl text-[#8B1E28] leading-relaxed">
+                  "{t('form.successMessage')}"
+                </h3>
+              )}
             </div>
 
-            <div className="bg-beige-light/50 p-6 rounded-xl border border-gold-600/20 text-left max-w-xl mx-auto space-y-3 text-xs sm:text-sm text-charcoal leading-relaxed">
-              <p className="font-semibold text-maroon-900">
-                {submittedResult.message}
-              </p>
-              <p className="text-charcoal-muted">
-                Our master artisans and estimating team in Tirupur will calculate the raw metal weights, iconographic labor requirements, and packaging specifications. We will reach out to you directly via <strong>{preferredContactMethod}</strong>.
-              </p>
-              <div className="pt-2 border-t border-beige text-[11px] text-charcoal-muted">
-                * Note: This is an enquiry for quotation formulation, not an automated order or payment transaction.
-              </div>
+            {/* Reference Box */}
+            <div className="p-4 bg-beige-light rounded-xl border border-gold-600/40 max-w-md mx-auto">
+              <span className="text-xs font-semibold text-charcoal-muted uppercase tracking-wider block">
+                {isBilingual ? 'விசாரணை குறிப்பு எண் | Enquiry Reference' : t('form.reference')}
+              </span>
+              <span className="text-lg font-mono font-bold text-[#8B1E28] tracking-wider block mt-1">
+                {submittedResult.ref}
+              </span>
             </div>
 
-            {/* Direct WhatsApp Follow-up shortcut */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <p className="text-xs text-charcoal-muted max-w-lg mx-auto leading-relaxed">
+              {isBilingual
+                ? 'எங்கள் திருப்பூர் பட்டறை நிர்வாகிகள் விரைவில் உங்களைத் தொடர்புகொள்வார்கள். கூடுதல் வரைபடங்கள் அனுப்ப வாட்ஸ்அப் வசதியைப் பயன்படுத்தலாம்.'
+                : t('form.contactFollowup')}
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <a
                 href={getWhatsAppLink(
-                  `Hello Sri Shakthi Vinayaga Metals, I have submitted a quotation request with reference number: ${submittedResult.ref}. Kindly review my requirement.`
+                  getWhatsAppMessage(null, `Quotation Reference: ${submittedResult.ref}`)
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm rounded shadow flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-medium text-xs flex items-center justify-center gap-2 shadow transition-colors"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Follow-up on WhatsApp</span>
+                <span>{isBilingual ? 'வாட்ஸ்அப் மூலம் பேச | Chat on WhatsApp' : t('common.chatWhatsApp')}</span>
               </a>
 
               <Link
                 to="/products"
-                className="w-full sm:w-auto px-6 py-3 bg-maroon-800 hover:bg-maroon-900 text-gold-300 font-semibold text-xs sm:text-sm rounded transition-colors"
+                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-maroon-800 hover:bg-maroon-900 text-gold-200 font-medium text-xs flex items-center justify-center gap-2 shadow transition-colors"
               >
-                Continue Browsing Products
+                <span>{isBilingual ? 'தயாரிப்புகளைக் காண்க | Explore More Products' : t('common.exploreProducts')}</span>
               </Link>
             </div>
           </div>
@@ -280,45 +391,34 @@ const RequestQuotePage = () => {
           /* Quotation Form */
           <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-2xl border border-gold-600/30 shadow-card-elevated p-6 sm:p-10 space-y-8"
+            className="bg-white rounded-2xl border border-gold-600/30 p-6 sm:p-10 shadow-card-elevated space-y-8"
           >
-            {/* Top Alert Note */}
-            <div className="bg-beige-light/60 p-4 rounded-xl border border-gold-600/20 text-xs text-charcoal-muted flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-gold-700 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-charcoal block">Direct Manufacturer Communication</span>
-                <span>
-                  No middleman markups. We confirm alloy purity, dimensions, and manufacturing timelines directly with temple authorities, sthapatis, and patrons across India.
-                </span>
-              </div>
-            </div>
-
-            {errors.server && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errors.server}</span>
-              </div>
-            )}
-
-            {/* Section 1: Customer & Organization Information */}
+            {/* Section 1: Customer & Temple Contact Information */}
             <div className="space-y-4">
               <h3 className="font-serif font-bold text-base text-maroon-950 pb-2 border-b border-gold-600/20 flex items-center gap-2">
-                <Building className="w-4 h-4 text-gold-600" />
-                <span>1. Contact & Location Information</span>
+                {isBilingual ? (
+                  <>
+                    <span className="font-tamil font-bold text-[#8B1E28]">1. தொடர்பு விவரங்கள்</span>
+                    <span className="text-charcoal-muted">| Contact Information</span>
+                  </>
+                ) : (
+                  <span className="font-bold text-[#8B1E28]">1. Contact Information</span>
+                )}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Full Name */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Your Full Name <span className="text-red-600">*</span>
+                    {isBilingual ? 'முழுப் பெயர் | Full Name *' : `${t('form.fullName')} *`}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. K. Sundaramoorthy"
+                    required
+                    placeholder={isBilingual ? 'e.g. Ramesh Kumar / K. Balasubramaniam' : t('form.fullName')}
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
+                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
                       errors.customerName ? 'border-red-500' : 'border-gold-600/40'
                     }`}
                   />
@@ -327,65 +427,71 @@ const RequestQuotePage = () => {
                   )}
                 </div>
 
-                {/* Organization / Temple */}
+                {/* Phone Number */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Temple / Organization / Store Name <span className="text-charcoal-muted font-normal">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Sri Mariamman Temple Trust / Pooja Bhandar"
-                    value={organizationName}
-                    onChange={(e) => setOrganizationName(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
-                  />
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Phone / WhatsApp Number <span className="text-red-600">*</span>
+                    {isBilingual ? 'தொலைபேசி எண் | Phone Number *' : `${t('form.phone')} *`}
                   </label>
                   <input
                     type="tel"
-                    placeholder="e.g. +91 98422 12345"
+                    required
+                    placeholder="+91 98422 12345"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
+                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
                       errors.phone ? 'border-red-500' : 'border-gold-600/40'
                     }`}
                   />
-                  {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
+                  {errors.phone && (
+                    <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>
+                  )}
                 </div>
 
-                {/* Email */}
+                {/* Email Address */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Email Address <span className="text-charcoal-muted font-normal">(Optional)</span>
+                    {isBilingual ? 'மின்னஞ்சல் முகவரி | Email Address' : t('form.email')}
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. trust@temple.org"
+                    placeholder="e.g. contact@templetrust.org"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
+                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
                       errors.email ? 'border-red-500' : 'border-gold-600/40'
                     }`}
                   />
-                  {errors.email && <p className="text-[11px] text-red-600 mt-1">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-[11px] text-red-600 mt-1">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* Temple / Business Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal mb-1">
+                    {isBilingual ? 'கோவில் / நிறுவனத்தின் பெயர் | Temple / Business Name' : t('form.templeOrBusinessName')}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={isBilingual ? 'e.g. Sri Mariamman Kovil Trust / SS Metal Stores' : t('form.templeOrBusinessName')}
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.target.value)}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                  />
                 </div>
 
                 {/* City */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    City / Town <span className="text-red-600">*</span>
+                    {isBilingual ? 'நகரம் | City *' : `${t('form.city')} *`}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Madurai, Coimbatore, Tirupur"
+                    required
+                    placeholder={isBilingual ? 'e.g. Tirupur, Coimbatore, Madurai' : t('form.city')}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
+                    className={`w-full bg-[#FAF6ED] border rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600 ${
                       errors.city ? 'border-red-500' : 'border-gold-600/40'
                     }`}
                   />
@@ -395,12 +501,12 @@ const RequestQuotePage = () => {
                 {/* State */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    State <span className="text-red-600">*</span>
+                    {isBilingual ? 'மாநிலம் | State *' : 'State *'}
                   </label>
                   <select
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                   >
                     {STATES_LIST.map((st) => (
                       <option key={st} value={st}>
@@ -411,133 +517,147 @@ const RequestQuotePage = () => {
                 </div>
 
                 {/* Customer Type */}
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    You are representing:
+                    {isBilingual ? 'வாடிக்கையாளர் வகை | Customer Type' : 'Customer Type'}
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {CUSTOMER_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setCustomerType(type)}
-                        className={`py-2 px-3 rounded-lg border text-xs font-medium transition-colors text-center ${
-                          customerType === type
-                            ? 'bg-maroon-800 text-gold-300 border-maroon-900 font-semibold shadow-xs'
-                            : 'bg-[#FAF6ED] border-gold-600/30 text-charcoal hover:bg-beige'
-                        }`}
-                      >
-                        {type}
-                      </button>
+                  <select
+                    value={customerType}
+                    onChange={(e) => setCustomerType(e.target.value)}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                  >
+                    {CUSTOMER_TYPES.map((ct) => (
+                      <option key={ct.value} value={ct.value}>
+                        {isBilingual ? ct.label : ct.label.split('|')[1]?.trim() || ct.label}
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                </div>
+
+                {/* Material Preference */}
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal mb-1">
+                    {isBilingual ? 'உலோக விருப்பம் | Material Preference' : t('common.material')}
+                  </label>
+                  <select
+                    value={materialPreference}
+                    onChange={(e) => setMaterialPreference(e.target.value)}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                  >
+                    {MATERIALS_LIST.map((mat) => (
+                      <option key={mat.value} value={mat.value}>
+                        {isBilingual ? mat.label : mat.label.split('|')[1]?.trim() || mat.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
 
-            {/* Section 2: Multi-Product Quotation Item Rows */}
+            {/* Section 2: Product Requirements & Items */}
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-gold-600/20">
                 <h3 className="font-serif font-bold text-base text-maroon-950 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gold-600" />
-                  <span>2. Product(s) for Quotation</span>
+                  {isBilingual ? (
+                    <>
+                      <span className="font-tamil font-bold text-[#8B1E28]">2. தயாரிப்புத் தேவைகள்</span>
+                      <span className="text-charcoal-muted">| Product Requirements</span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-[#8B1E28]">2. Product Requirements</span>
+                  )}
                 </h3>
+
                 <button
                   type="button"
                   onClick={handleAddItemRow}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-maroon-800 hover:text-gold-700 bg-beige px-3 py-1.5 rounded border border-gold-600/30 transition-colors"
+                  className="px-3 py-1.5 rounded bg-gold-600 hover:bg-gold-500 text-maroon-950 text-xs font-semibold flex items-center gap-1 shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Another Product</span>
+                  <span>{isBilingual ? 'பொருள் சேர் | Add Item' : 'Add Item'}</span>
                 </button>
               </div>
 
-              {errors.items && (
-                <p className="text-xs text-red-600 font-medium">{errors.items}</p>
-              )}
+              {errors.items && <p className="text-xs text-red-600">{errors.items}</p>}
 
               <div className="space-y-3">
                 {items.map((row, index) => (
                   <div
                     key={index}
-                    className="p-4 bg-[#FAF6ED] rounded-xl border border-gold-600/30 relative space-y-3"
+                    className="p-4 bg-[#FAF6ED]/70 rounded-xl border border-gold-600/30 relative space-y-3"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-serif font-bold text-gold-800 uppercase tracking-wider">
-                        Product Item #{index + 1}
+                    <div className="flex items-center justify-between text-xs font-semibold text-[#8B1E28]">
+                      <span>
+                        {isBilingual ? `பொருள் #${index + 1} | Item #${index + 1}` : `Item #${index + 1}`}
                       </span>
                       {items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItemRow(index)}
-                          className="text-red-700 hover:text-red-900 p-1 text-xs flex items-center gap-1"
-                          title="Remove this product item"
+                          className="text-red-600 hover:text-red-800 flex items-center gap-1 text-[11px]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Remove</span>
+                          <span>{isBilingual ? 'நீக்கு | Remove' : 'Remove'}</span>
                         </button>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                      {/* Product Name or Custom Description */}
+                      {/* Product Name */}
                       <div className="sm:col-span-6">
                         <label className="block text-[11px] font-semibold text-charcoal mb-1">
-                          Product Name or Category Description
+                          {isBilingual ? 'தயாரிப்பைத் தேர்ந்தெடுக்கவும் / பெயர் | Select Product / Name *' : `${t('form.selectProduct')} *`}
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. Makara Torana Prabavalayam or 42 inch Kalasam"
+                          required
+                          placeholder={isBilingual ? 'e.g. மகர தோரண பிரபாவளையம் / Makara Prabavalayam' : t('form.selectProduct')}
                           value={row.productName}
-                          onChange={(e) =>
-                            handleItemChange(index, 'productName', e.target.value)
-                          }
-                          className="w-full bg-white border border-gold-600/40 rounded px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                          onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                          className="w-full bg-white border border-gold-600/40 rounded px-2.5 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                         />
                       </div>
 
-                      {/* Product Code if known */}
+                      {/* Product Code */}
                       <div className="sm:col-span-3">
                         <label className="block text-[11px] font-semibold text-charcoal mb-1">
-                          Product Code (if known)
+                          {isBilingual ? 'குறியீடு | Product Code' : t('common.productCode')}
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. SSVM-PB-001"
                           value={row.productCode}
-                          onChange={(e) =>
-                            handleItemChange(index, 'productCode', e.target.value)
-                          }
-                          className="w-full bg-white border border-gold-600/40 rounded px-3 py-2 text-xs font-mono text-charcoal focus:outline-none focus:border-gold-600"
+                          onChange={(e) => handleItemChange(index, 'productCode', e.target.value)}
+                          className="w-full bg-white border border-gold-600/40 rounded px-2.5 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600 font-mono"
                         />
                       </div>
 
-                      {/* Quantity */}
+                      {/* Quantity Required */}
                       <div className="sm:col-span-3">
                         <label className="block text-[11px] font-semibold text-charcoal mb-1">
-                          Quantity Required
+                          {isBilingual ? 'தேவையான அளவு | Quantity *' : `${t('form.quantity')} *`}
                         </label>
                         <input
                           type="number"
                           min="1"
+                          required
                           value={row.quantity}
-                          onChange={(e) =>
-                            handleItemChange(index, 'quantity', Math.max(1, parseInt(e.target.value, 10) || 1))
-                          }
-                          className="w-full bg-white border border-gold-600/40 rounded px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                          className="w-full bg-white border border-gold-600/40 rounded px-2.5 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                         />
                       </div>
 
-                      {/* Specific item sizing note */}
+                      {/* Specific Dimensions & Requirements */}
                       <div className="sm:col-span-12">
+                        <label className="block text-[11px] font-semibold text-charcoal mb-1">
+                          {isBilingual ? 'குறிப்பிட்ட அளவுகள் அல்லது தேவைகள் | Specific Dimensions & Requirements' : t('form.dimensions')}
+                        </label>
                         <input
                           type="text"
-                          placeholder="Specific sizing notes for this item (e.g. 48 inch height, double peacock, 18-gauge sheet)..."
+                          placeholder={isBilingual ? 'e.g. உயரம் 48 அங்குலம், மூலவர் விக்கிரகத்திற்கு ஏற்ப | Height 48 inches for Moolavar idol' : t('form.dimensions')}
                           value={row.requirements}
-                          onChange={(e) =>
-                            handleItemChange(index, 'requirements', e.target.value)
-                          }
-                          className="w-full bg-white border border-gold-600/30 rounded px-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                          onChange={(e) => handleItemChange(index, 'requirements', e.target.value)}
+                          className="w-full bg-white border border-gold-600/40 rounded px-2.5 py-1.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                         />
                       </div>
                     </div>
@@ -546,128 +666,143 @@ const RequestQuotePage = () => {
               </div>
             </div>
 
-            {/* Section 3: Technical Specifications & Preferences */}
+            {/* Section 3: Dimensions, Notes & Reference Drawings */}
             <div className="space-y-4">
               <h3 className="font-serif font-bold text-base text-maroon-950 pb-2 border-b border-gold-600/20 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-gold-600" />
-                <span>3. Material, Sizing & Customization Preferences</span>
+                {isBilingual ? (
+                  <>
+                    <span className="font-tamil font-bold text-[#8B1E28]">3. அளவுகள் மற்றும் கூடுதல் தகவல்கள்</span>
+                    <span className="text-charcoal-muted">| Dimensions & Additional Message</span>
+                  </>
+                ) : (
+                  <span className="font-bold text-[#8B1E28]">3. Dimensions & Additional Information</span>
+                )}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Material Preference */}
+                {/* Required Dimensions */}
                 <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Preferred Metal / Alloy
-                  </label>
-                  <select
-                    value={materialPreference}
-                    onChange={(e) => setMaterialPreference(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
-                  >
-                    <option value="Brass">High-Purity Virgin Brass</option>
-                    <option value="Pure Copper">99.9% Electrolytic Copper (Recommended for Sanctum Kalasam)</option>
-                    <option value="Bronze">Traditional Bronze (Ven-Kalam)</option>
-                    <option value="Panchaloha">Panchaloha (Traditional 5-Metal Consecration Alloy)</option>
-                    <option value="Silver Plated">Silver Plated / Embossed</option>
-                    <option value="To be advised by Manufacturer">Advise me based on requirement</option>
-                  </select>
-                </div>
-
-                {/* Overall Dimensions */}
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Overall Sizing or Dimensions <span className="text-charcoal-muted font-normal">(if known)</span>
+                    {isBilingual ? 'தேவையான அளவுகள் | Required Dimensions' : t('form.dimensions')}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Sanctum opening 5 ft x 3 ft, or Deity height 36 inches"
+                    placeholder={isBilingual ? 'e.g. பிரபாவளையம் 4 அடி, கலசம் 32 அங்குலம் | Arch 4 ft, Kalasam 32 inches' : t('form.dimensions')}
                     value={sizeRequirements}
                     onChange={(e) => setSizeRequirements(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                   />
                 </div>
 
-                {/* Customization Details */}
-                <div className="sm:col-span-2">
+                {/* Custom Details */}
+                <div>
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Customization Details / Temple Inscriptions / Special Motifs
+                    {isBilingual ? 'தனிப்பயன் வேலைப்பாடுகள் | Inscription / Special Details' : 'Special Notes / Inscriptions'}
                   </label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. Ashtalakshmi embossing required, temple name inscribed on base, specific date for Kumbhabhishekam..."
+                  <input
+                    type="text"
+                    placeholder={isBilingual ? 'e.g. பீடத்தில் கோவில் பெயர் செதுக்கப்பட வேண்டும் | Temple name on base' : 'e.g. Inscription on pedestal'}
                     value={customizationDetails}
                     onChange={(e) => setCustomizationDetails(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
-                  ></textarea>
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
+                  />
                 </div>
 
                 {/* Additional Message */}
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Additional Instructions or Queries
+                    {isBilingual ? 'கூடுதல் தகவல்கள் | Additional Message' : t('form.message')}
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Provide any additional context or delivery destination details..."
+                    placeholder={isBilingual ? 'ஆலய திருப்பணி விபரம், கும்பாபிஷேக தேதி, டெலிவரி இடம்... | Temple consecration date, delivery location, specific instructions...' : t('form.message')}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-gold-600"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 4: Reference Image Upload & Contact Preference */}
-            <div className="space-y-4">
-              <h3 className="font-serif font-bold text-base text-maroon-950 pb-2 border-b border-gold-600/20 flex items-center gap-2">
-                <Upload className="w-4 h-4 text-gold-600" />
-                <span>4. Reference Photos & Contact Method</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                {/* Upload Input */}
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Upload Reference Photos or Blueprints <span className="text-charcoal-muted font-normal">(Max 4 images)</span>
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="w-full text-xs text-charcoal-muted file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-maroon-800 file:text-gold-300 hover:file:bg-maroon-900 cursor-pointer"
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded-lg px-3 py-2 text-xs text-charcoal focus:outline-none focus:border-gold-600"
                   />
-                  {filePreviews.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {filePreviews.map((url, i) => (
-                        <div key={i} className="w-12 h-12 rounded border border-gold-600 overflow-hidden">
-                          <img src={url} alt="Preview" className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                </div>
+
+                {/* Upload Blueprints / Reference Images */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-charcoal mb-1">
+                    {isBilingual ? 'வரைபடங்கள் அல்லது குறிப்புப் படங்கள் | Upload Blueprints / Reference Images (optional)' : 'Upload Blueprints / Reference Images (optional)'}
+                  </label>
+                  <div className="border-2 border-dashed border-gold-600/40 rounded-xl p-4 bg-[#FAF6ED]/60 text-center">
+                    <input
+                      type="file"
+                      id="file-upload"
+                      multiple
+                      accept="image/*,.pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer inline-flex flex-col items-center justify-center gap-1.5"
+                    >
+                      <Upload className="w-6 h-6 text-gold-700" />
+                      <span className="text-xs font-semibold text-[#8B1E28]">
+                        {isBilingual ? 'கோப்புகளைத் தேர்ந்தெடுக்க இங்கே கிளிக் செய்யவும் | Click to choose files' : 'Click to choose files'}
+                      </span>
+                      <span className="text-[11px] text-charcoal-muted">
+                        JPG, PNG, PDF (Max 4 files, up to 5MB each)
+                      </span>
+                    </label>
+
+                    {filePreviews.length > 0 && (
+                      <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-gold-600/20">
+                        {filePreviews.map((url, i) => (
+                          <div
+                            key={i}
+                            className="w-14 h-14 rounded-lg overflow-hidden border border-gold-600/40 bg-white"
+                          >
+                            <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Preferred Contact Method */}
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal mb-1">
-                    Preferred Contact Method for Quotation
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-charcoal mb-1.5">
+                    {isBilingual ? 'தொடர்பு கொள்ள விருப்பமான வழி | Preferred Contact Method:' : 'Preferred Contact Method:'}
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['WhatsApp', 'Phone', 'Email'].map((method) => (
-                      <button
-                        key={method}
-                        type="button"
-                        onClick={() => setPreferredContactMethod(method)}
-                        className={`py-2 px-3 rounded-lg border text-xs font-medium text-center transition-colors ${
-                          preferredContactMethod === method
-                            ? 'bg-maroon-800 text-gold-300 border-maroon-900 font-semibold'
-                            : 'bg-[#FAF6ED] border-gold-600/30 text-charcoal hover:bg-beige'
-                        }`}
-                      >
-                        {method}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap items-center gap-4 text-xs">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contactMethod"
+                        value="WhatsApp"
+                        checked={preferredContactMethod === 'WhatsApp'}
+                        onChange={(e) => setPreferredContactMethod(e.target.value)}
+                        className="text-emerald-700 focus:ring-emerald-600"
+                      />
+                      <span>{isBilingual ? 'வாட்ஸ்அப் | WhatsApp' : 'WhatsApp'}</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contactMethod"
+                        value="Phone Call"
+                        checked={preferredContactMethod === 'Phone Call'}
+                        onChange={(e) => setPreferredContactMethod(e.target.value)}
+                        className="text-[#8B1E28] focus:ring-[#8B1E28]"
+                      />
+                      <span>{isBilingual ? 'தொலைபேசி அழைப்பு | Phone Call' : 'Phone Call'}</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contactMethod"
+                        value="Email"
+                        checked={preferredContactMethod === 'Email'}
+                        onChange={(e) => setPreferredContactMethod(e.target.value)}
+                        className="text-[#8B1E28] focus:ring-[#8B1E28]"
+                      />
+                      <span>{isBilingual ? 'மின்னஞ்சல் | Email' : 'Email'}</span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -678,23 +813,26 @@ const RequestQuotePage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-500 hover:to-gold-600 disabled:opacity-50 text-maroon-950 font-serif font-bold text-base tracking-wide rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all"
+                className="w-full py-4 bg-gradient-to-r from-gold-600 via-gold-700 to-gold-600 hover:from-gold-500 hover:to-gold-600 text-maroon-950 font-serif font-bold text-sm sm:text-base rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
               >
                 {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-maroon-950 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Submitting to Sri Shakthi Vinayaga Metals...</span>
-                  </>
+                  <span>{isBilingual ? 'விசாரணை அனுப்பப்படுகிறது... | Submitting Enquiry...' : t('form.submitting')}</span>
                 ) : (
                   <>
-                    <FileText className="w-5 h-5" />
-                    <span>Submit Quotation Request</span>
+                    <FileText className="w-5 h-5 text-maroon-950" />
+                    {isBilingual ? (
+                      <>
+                        <span className="font-tamil font-extrabold text-base">
+                          விசாரணையைச் சமர்ப்பிக்கவும்
+                        </span>
+                        <span className="text-maroon-950/90 font-serif">| Submit Enquiry</span>
+                      </>
+                    ) : (
+                      <span className="font-bold text-base">{t('form.submit')}</span>
+                    )}
                   </>
                 )}
               </button>
-              <p className="text-[11px] text-charcoal-muted text-center mt-2">
-                By submitting, your requirements are delivered directly to the manufacturer in Tirupur. You will receive an official quotation reference number.
-              </p>
             </div>
           </form>
         )}

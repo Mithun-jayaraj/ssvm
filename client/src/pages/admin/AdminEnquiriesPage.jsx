@@ -161,15 +161,15 @@ const AdminEnquiriesPage = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FAF6ED] text-charcoal-muted font-semibold uppercase tracking-wider text-[11px] border-b border-gold-600/20">
               <tr>
-                <th className="py-3 px-4">Enquiry Ref</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Customer & Temple</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Location</th>
-                <th className="py-3 px-4">Contact</th>
-                <th className="py-3 px-4">Products</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">குறிப்பு எண் | Ref</th>
+                <th className="py-3 px-4">தேதி | Date</th>
+                <th className="py-3 px-4">வாடிக்கையாளர் | Customer</th>
+                <th className="py-3 px-4">வகை | Type</th>
+                <th className="py-3 px-4">ஊர் | Location</th>
+                <th className="py-3 px-4">தொடர்பு | Contact</th>
+                <th className="py-3 px-4">பொருட்கள் | Products</th>
+                <th className="py-3 px-4">நிலை | Status</th>
+                <th className="py-3 px-4 text-right">செயல்கள் | Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gold-600/10">

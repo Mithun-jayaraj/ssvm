@@ -7,6 +7,19 @@ const productSchema = new mongoose.Schema(
       required: [true, 'Product name is required'],
       trim: true,
     },
+    tamilName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    nameTranslations: {
+      ta: { type: String, default: '' },
+      en: { type: String, default: '' },
+      ml: { type: String, default: '' },
+      te: { type: String, default: '' },
+      kn: { type: String, default: '' },
+      hi: { type: String, default: '' },
+    },
     slug: {
       type: String,
       required: true,
@@ -26,10 +39,36 @@ const productSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    tamilShortDescription: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    shortDescriptionTranslations: {
+      ta: { type: String, default: '' },
+      en: { type: String, default: '' },
+      ml: { type: String, default: '' },
+      te: { type: String, default: '' },
+      kn: { type: String, default: '' },
+      hi: { type: String, default: '' },
+    },
     fullDescription: {
       type: String,
       trim: true,
       default: '',
+    },
+    tamilFullDescription: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    fullDescriptionTranslations: {
+      ta: { type: String, default: '' },
+      en: { type: String, default: '' },
+      ml: { type: String, default: '' },
+      te: { type: String, default: '' },
+      kn: { type: String, default: '' },
+      hi: { type: String, default: '' },
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -115,7 +154,7 @@ const productSchema = new mongoose.Schema(
 // Indexes for fast querying
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ isFeatured: 1, status: 1 });
-productSchema.index({ name: 'text', shortDescription: 'text', material: 'text', productCode: 'text' });
+productSchema.index({ name: 'text', tamilName: 'text', shortDescription: 'text', tamilShortDescription: 'text', material: 'text', productCode: 'text' });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;

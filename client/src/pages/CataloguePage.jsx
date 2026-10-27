@@ -121,8 +121,18 @@ const CataloguePage = () => {
     currentSort !== 'newest';
 
   return (
-    <div className="bg-[#FAF6ED] min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="relative bg-[#FAF6ED] min-h-screen py-10 overflow-hidden">
+      {/* Faded Temple Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+        <img
+          src="/images/temple_categories_bg.jpg"
+          alt="South Indian Temple Gopuram Background"
+          className="w-full h-full object-cover object-[center_25%] opacity-30 mix-blend-multiply"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FAF6ED]/80 via-[#FAF6ED]/30 to-[#FAF6ED]" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Title */}
         <div className="text-center max-w-2xl mx-auto mb-8">
           <span className="text-xs font-serif font-bold tracking-widest uppercase text-maroon-800">

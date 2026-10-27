@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Trash2, Plus, Minus, ArrowRight, FileText, ShoppingBag } from 'lucide-react';
 import { useQuotation } from '../../context/QuotationContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const QuotationTrayDrawer = () => {
   const {
@@ -14,6 +15,7 @@ const QuotationTrayDrawer = () => {
     setIsDrawerOpen,
   } = useQuotation();
 
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   if (!isDrawerOpen) return null;
@@ -24,7 +26,7 @@ const QuotationTrayDrawer = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden font-sans">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
@@ -38,7 +40,7 @@ const QuotationTrayDrawer = () => {
             <div className="flex items-center gap-2.5">
               <FileText className="w-5 h-5 text-gold-400" />
               <h2 className="font-serif font-bold text-lg tracking-wide text-gold-300">
-                Quotation Request Tray
+                {t('common.quotationTrayTitle')}
               </h2>
             </div>
             <button
@@ -53,7 +55,7 @@ const QuotationTrayDrawer = () => {
           {/* Subheader Information */}
           <div className="bg-beige-light px-5 py-2.5 border-b border-gold-600/30 text-xs text-charcoal-muted flex justify-between items-center">
             <span>
-              {quotationItems.length} {quotationItems.length === 1 ? 'Product' : 'Products'} Selected
+              {quotationItems.length} {t('common.itemsSelected')}
             </span>
             {quotationItems.length > 0 && (
               <button
@@ -62,7 +64,7 @@ const QuotationTrayDrawer = () => {
                 className="text-red-700 hover:underline flex items-center gap-1 text-[11px] font-semibold"
               >
                 <Trash2 className="w-3 h-3" />
-                <span>Clear All</span>
+                <span>{t('common.clearAll')}</span>
               </button>
             )}
           </div>
@@ -73,10 +75,10 @@ const QuotationTrayDrawer = () => {
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-charcoal-muted">
                 <ShoppingBag className="w-12 h-12 text-gold-600/50 mb-3" />
                 <p className="font-serif font-semibold text-base text-charcoal">
-                  Your Quotation Tray is Empty
+                  {t('common.trayEmptyTitle')}
                 </p>
                 <p className="text-xs text-charcoal-muted mt-1 max-w-xs">
-                  Browse our temple product catalogue and click "Get Quote" to add items for a consolidated quotation.
+                  {t('common.trayEmptyDesc')}
                 </p>
               </div>
             ) : (
@@ -108,7 +110,7 @@ const QuotationTrayDrawer = () => {
 
                     {/* Quantity controls */}
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[11px] text-charcoal-muted font-medium">Qty:</span>
+                      <span className="text-[11px] text-charcoal-muted font-medium">{t('form.quantity')}:</span>
                       <div className="flex items-center border border-gold-600/40 rounded bg-[#FAF6ED]">
                         <button
                           type="button"
@@ -136,7 +138,7 @@ const QuotationTrayDrawer = () => {
                     {/* Requirement note field */}
                     <input
                       type="text"
-                      placeholder="Custom sizing notes (optional)..."
+                      placeholder={t('form.dimensions')}
                       value={item.requirements || ''}
                       onChange={(e) =>
                         updateRequirements(item.product || item.productCode, e.target.value)
@@ -150,7 +152,7 @@ const QuotationTrayDrawer = () => {
                     type="button"
                     onClick={() => removeFromQuote(item.product || item.productCode)}
                     className="absolute top-2 right-2 text-charcoal-muted/60 hover:text-red-700 transition-colors p-1"
-                    title="Remove item from quotation tray"
+                    title={t('common.close')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -163,7 +165,7 @@ const QuotationTrayDrawer = () => {
           {quotationItems.length > 0 && (
             <div className="p-5 bg-white border-t border-gold-600/30 space-y-3">
               <div className="text-xs text-charcoal-muted leading-tight">
-                * Submit your request to receive a direct official quotation with confirmed manufacturing timelines from Sri Shakthi Vinayaga Metals.
+                {t('common.quoteNotice')}
               </div>
 
               <button
@@ -171,7 +173,7 @@ const QuotationTrayDrawer = () => {
                 onClick={handleProceed}
                 className="w-full py-3 bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-500 hover:to-gold-600 text-maroon-950 font-serif font-bold text-sm rounded shadow-md flex items-center justify-center gap-2 transition-transform transform active:scale-98"
               >
-                <span>Proceed to Request Quotation</span>
+                <span>{t('common.proceedQuote')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

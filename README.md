@@ -192,3 +192,127 @@ npm run dev      # Starts Vite dev server on http://localhost:5173
 - [x] Admin can update quotation statuses, enter quotation amounts, and append internal notes.
 - [x] CSV export generates an Excel-compatible report of all enquiries.
 - [x] No online payment checkout or unverified claims present.
+
+---
+
+## 🔍 Search Engine Optimization (SEO) & Web Visibility Architecture
+
+Sri Shakthi Vinayaga Metals is built with an enterprise-grade Technical and Local SEO foundation designed to dominate organic Google search results for traditional temple metalware, custom castings, and consecration items across Tamil Nadu and India.
+
+### 1. Technical SEO Specifications
+- **Dynamic Head Management**: [`SEOHead.jsx`](file:///c:/Users/Mithun/Desktop/sri%20shakthi%20vinayaga%20metals/client/src/components/common/SEOHead.jsx) actively manages page `<title>`, `<meta name="description">`, `<meta name="keywords">`, `<link rel="canonical">`, OpenGraph, Twitter Cards, robots directives, and JSON-LD structured data.
+- **Static Prerendering Engine**: [`client/scripts/generate-static-seo.js`](file:///c:/Users/Mithun/Desktop/sri%20shakthi%20vinayaga%20metals/client/scripts/generate-static-seo.js) runs automatically during `npm run build`. It generates static HTML files in `client/dist/` for every public page, category, and individual product URL. This guarantees search engine crawlers (Googlebot, Bingbot) and social media scrapers (WhatsApp, Facebook) receive 100% crawlable semantic HTML and JSON-LD even without executing JavaScript.
+- **Crawler Directives**: [`client/public/robots.txt`](file:///c:/Users/Mithun/Desktop/sri%20shakthi%20vinayaga%20metals/client/public/robots.txt) enables full search engine indexing across all public products and categories while blocking administrative endpoints (`/admin`, `/api/admin`).
+- **XML Sitemap**: [`client/public/sitemap.xml`](file:///c:/Users/Mithun/Desktop/sri%20shakthi%20vinayaga%20metals/client/public/sitemap.xml) contains 28 canonical URLs with exact `lastmod`, `changefreq`, and `priority` weightings.
+- **Short URL Aliases**: Clean, canonical aliases for primary products:
+  - `/products/prabavalayam` → Canonical to Grand Makara Torana Brass Prabavalayam
+  - `/products/kalasam` → Canonical to Traditional Gopuram Brass Temple Kalasam
+  - `/products/kodimaram` → Canonical to Sacred Temple Kodimaram Brass Cladding
+  - `/products/kovil-mani` → Canonical to Consecrated Cast Bronze Temple Bell
+- **Schema.org Structured Data (JSON-LD)**:
+  - `Organization` & `LocalBusiness`: Exact foundry address in Tiruppur, contact points, geo-coordinates (`11.1085, 77.3411`), and opening hours.
+  - `WebSite`: Sitelinks Searchbox specification.
+  - `BreadcrumbList`: Accurate hierarchical breadcrumbs on all subpages.
+  - `Product`: Conforms to quotation-based manufacturing (no fake e-commerce prices, no fabricated reviews; includes genuine material, dimension, weight specifications, and `priceCurrency: "INR"` with custom dimensional quotation notice).
+
+### 2. Frontend Environment Variables
+Set the following variables in `client/.env.production` or your hosting provider (e.g. Vercel):
+
+```env
+# Canonical production site domain (no trailing slash)
+VITE_SITE_URL=https://srishakthivinayagametals.com
+
+# Backend API endpoint URL
+VITE_API_BASE_URL=https://api.srishakthivinayagametals.com/api
+
+# Google Analytics 4 Measurement ID (Optional, e.g. G-XXXXXXXXXX)
+VITE_GA_MEASUREMENT_ID=
+```
+
+---
+
+## 📈 Google Search Console (GSC) Setup Guide
+
+Follow these exact steps once the website is deployed to your production domain:
+
+### Step 1: Verify Domain Ownership
+1. Go to [Google Search Console](https://search.google.com/search-console).
+2. Choose **Domain** property (recommended) or **URL prefix** property:
+   - **Domain Property (Recommended)**: Enter `srishakthivinayagametals.com`. Google will generate a DNS TXT record (e.g., `google-site-verification=XXXXXXXXXXXXXXXXXXXX`). Add this TXT record to your DNS provider (Cloudflare, GoDaddy, Namecheap). Click **Verify**.
+   - **URL Prefix (Alternative)**: Enter `https://srishakthivinayagametals.com`. Download the HTML verification file provided by Google (e.g., `google1234567890abcdef.html`) and place it inside `client/public/`, then redeploy. Alternatively, copy the meta tag provided and add it to `client/index.html`.
+
+### Step 2: Submit the XML Sitemap
+1. In the left navigation of Google Search Console, click **Sitemaps** under *Indexing*.
+2. In the "Add a new sitemap" input, enter:
+   ```text
+   sitemap.xml
+   ```
+3. Click **Submit**.
+4. Confirm that the status changes to **Success**. GSC will discover all 28 canonical URLs.
+
+### Step 3: Inspect & Request Indexing for Core Pages
+1. Use the **URL Inspection** bar at the top of Google Search Console.
+2. Test the primary URLs first:
+   - `https://srishakthivinayagametals.com/`
+   - `https://srishakthivinayagametals.com/products`
+   - `https://srishakthivinayagametals.com/products/prabavalayam`
+   - `https://srishakthivinayagametals.com/products/kalasam`
+   - `https://srishakthivinayagametals.com/custom-manufacturing`
+   - `https://srishakthivinayagametals.com/contact`
+3. Click **Test Live URL** to confirm that Googlebot can fetch the HTML, see the Schema.org JSON-LD, and render the page.
+4. Click **Request Indexing**. *(Note: Google typically crawls and indexes requested pages within 24 to 72 hours. Avoid repeatedly requesting indexing).*
+
+### Step 4: Monitor Indexing & Search Performance
+- **Pages Report**: Check weekly for any `404 Not Found`, redirect errors, or canonical mismatches.
+- **Performance Report**: Monitor queries related to:
+  - *Temple metal products manufacturer in Tamil Nadu*
+  - *Prabavalayam manufacturer*
+  - *Brass Kalasam manufacturer*
+  - *Temple Kodimaram supplier*
+  - *Kovil Mani manufacturer*
+- **Rich Results Test**: Validate live URLs using [Google Rich Results Test](https://search.google.com/test/rich-results) to verify `Product`, `BreadcrumbList`, and `Organization` schemas.
+
+---
+
+## 📍 Google Business Profile (GBP) Local SEO Guide for Tiruppur
+
+To maximize local enquiries from temple committees, pooja stores, and sthapatis across Tamil Nadu, set up a Google Business Profile:
+
+1. **Sign in to Google Business Profile**: Navigate to [google.com/business](https://www.google.com/business/).
+2. **Business Name**: Enter the exact registered name:
+   `Sri Shakthi Vinayaga Metals`
+3. **Primary Category**:
+   - Primary: `Metal fabricator` or `Manufacturer`
+   - Additional Categories: `Religious goods store`, `Brassware store`, `Foundry`
+4. **Physical Address**:
+   - Location: 124, Foundry Road, Near Sivan Temple, Velampalayam, Tiruppur, Tamil Nadu 641652, India.
+   - Pin location accurately on the map to match coordinates (`11.1085° N, 77.3411° E`).
+5. **Service Area**:
+   - Primary: Tiruppur, Coimbatore, Madurai, Thanjavur, Chennai, Salem, Erode.
+   - Secondary: All districts of Tamil Nadu, Kerala, Karnataka, Andhra Pradesh, Telangana, and Pan-India.
+6. **Contact Number**: `+91 98422 12345` (matching the website footer and contact page).
+7. **Website Link**: `https://srishakthivinayagametals.com`
+8. **Products Section in GBP**:
+   - Add catalog items with high-resolution foundry photographs:
+     - *Grand Makara Torana Brass Prabavalayam*
+     - *Traditional Gopuram Brass Temple Kalasam*
+     - *Sacred Temple Kodimaram Brass Cladding*
+     - *Consecrated Cast Bronze Kovil Mani*
+   - Link each product to its respective website URL (`/products/prabavalayam`, etc.) with a "Get Quote" button.
+9. **Verification**: Complete verification via Google's required method (video recording of foundry workshop or postcard verification). Do not claim verification without direct business owner authorization.
+
+---
+
+## 📊 Analytics & Enquiry Tracking
+
+The application includes privacy-safe Google Analytics 4 (GA4) event tracking via [`client/src/services/analytics.js`](file:///c:/Users/Mithun/Desktop/sri%20shakthi%20vinayaga%20metals/client/src/services/analytics.js):
+
+| Event Name | Trigger | Tracked Parameters |
+| :--- | :--- | :--- |
+| `page_view` | Route navigation | `page_path`, `page_title` |
+| `view_item` | Product detail page loaded | `item_id`, `item_name`, `item_category` |
+| `begin_quotation` | Clicking "Request Quotation" | `item_id`, `item_name` |
+| `whatsapp_enquiry_click` | Clicking "WhatsApp Enquiry" | `item_name`, `product_code`, `source` |
+| `generate_lead` | Successful quote or contact form submit | `form_type`, `lead_id`, `items_count` |
+
+*Note: No personal identification data (phone, email, customer name) is sent to analytics to ensure full privacy compliance.*

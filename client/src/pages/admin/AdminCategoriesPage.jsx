@@ -55,8 +55,10 @@ const AdminCategoriesPage = () => {
     setEditingId(null);
     setCatForm({
       name: '',
+      tamilName: '',
       slug: '',
       description: '',
+      tamilDescription: '',
       image: '',
       displayOrder: categories.length + 1,
       isPrimary: false,
@@ -69,8 +71,10 @@ const AdminCategoriesPage = () => {
     setEditingId(cat._id);
     setCatForm({
       name: cat.name || '',
+      tamilName: cat.tamilName || '',
       slug: cat.slug || '',
       description: cat.description || '',
+      tamilDescription: cat.tamilDescription || '',
       image: cat.image || '',
       displayOrder: cat.displayOrder || 0,
       isPrimary: Boolean(cat.isPrimary),
@@ -204,12 +208,15 @@ const AdminCategoriesPage = () => {
                           </div>
                         )}
                         <div>
-                          <span className="font-serif font-bold text-charcoal block">
+                          <span className="font-tamil font-bold text-sm text-[#8B1E28] block">
+                            {cat.tamilName || cat.name}
+                          </span>
+                          <span className="font-serif font-bold text-xs text-charcoal block">
                             {cat.name}
                           </span>
-                          {cat.description && (
+                          {(cat.tamilDescription || cat.description) && (
                             <span className="text-[11px] text-charcoal-muted line-clamp-1 max-w-xs block">
-                              {cat.description}
+                              {cat.tamilDescription || cat.description}
                             </span>
                           )}
                         </div>
@@ -290,18 +297,33 @@ const AdminCategoriesPage = () => {
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-charcoal mb-1">
-                  Category Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Prabavalayam"
-                  value={catForm.name}
-                  onChange={(e) => setCatForm({ ...catForm, name: e.target.value })}
-                  required
-                  className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-charcoal mb-1">
+                    Category Name (English) <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Prabavalayam"
+                    value={catForm.name}
+                    onChange={(e) => setCatForm({ ...catForm, name: e.target.value })}
+                    required
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-charcoal mb-1">
+                    பிரிவு பெயர் (Tamil Name)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. பிரபாவளையம்"
+                    value={catForm.tamilName}
+                    onChange={(e) => setCatForm({ ...catForm, tamilName: e.target.value })}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600 font-tamil"
+                  />
+                </div>
               </div>
 
               <div>
@@ -317,15 +339,32 @@ const AdminCategoriesPage = () => {
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold text-charcoal mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="Short description for category cards"
-                  value={catForm.description}
-                  onChange={(e) => setCatForm({ ...catForm, description: e.target.value })}
-                  className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600"
-                ></textarea>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-charcoal mb-1">
+                    Description (English)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Short description for category cards"
+                    value={catForm.description}
+                    onChange={(e) => setCatForm({ ...catForm, description: e.target.value })}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-charcoal mb-1">
+                    சுருக்க விளக்கம் (Tamil Description)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="அட்டைப் பார்வைக்கான சுருக்கமான விளக்கம்"
+                    value={catForm.tamilDescription}
+                    onChange={(e) => setCatForm({ ...catForm, tamilDescription: e.target.value })}
+                    className="w-full bg-[#FAF6ED] border border-gold-600/40 rounded px-3 py-2 text-charcoal focus:outline-none focus:border-gold-600 font-tamil"
+                  ></textarea>
+                </div>
               </div>
 
               <div>

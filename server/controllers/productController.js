@@ -51,8 +51,14 @@ export const getPublicProducts = async (req, res, next) => {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
         { name: searchRegex },
+        { tamilName: searchRegex },
+        { 'nameTranslations.ml': searchRegex },
+        { 'nameTranslations.te': searchRegex },
+        { 'nameTranslations.kn': searchRegex },
+        { 'nameTranslations.hi': searchRegex },
         { productCode: searchRegex },
         { shortDescription: searchRegex },
+        { tamilShortDescription: searchRegex },
         { material: searchRegex },
       ];
     }
@@ -137,10 +143,24 @@ export const getFeaturedProducts = async (req, res, next) => {
  */
 export const getProductBySlug = async (req, res, next) => {
   try {
-    const product = await Product.findOne({
+    const slugAliases = {
+      prabavalayam: 'grand-makara-torana-brass-prabavalayam',
+      kalasam: 'gopuram-brass-temple-kalasam',
+      kodimaram: 'sacred-temple-kodimaram-brass-cladding-cylinders',
+      'kovil-mani': 'heavy-hand-cast-temple-brass-bell-nandi-finial',
+    };
+
+    let product = await Product.findOne({
       slug: req.params.slug,
       status: 'published',
     }).populate('category', 'name slug description isPrimary');
+
+    if (!product && slugAliases[req.params.slug]) {
+      product = await Product.findOne({
+        slug: slugAliases[req.params.slug],
+        status: 'published',
+      }).populate('category', 'name slug description isPrimary');
+    }
 
     if (!product) {
       return res.status(404).json({
@@ -190,6 +210,7 @@ export const getAdminProducts = async (req, res, next) => {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
         { name: searchRegex },
+        { tamilName: searchRegex },
         { productCode: searchRegex },
         { material: searchRegex },
       ];
@@ -252,10 +273,13 @@ export const createProduct = async (req, res, next) => {
   try {
     const {
       name,
+      tamilName,
       productCode,
       category,
       shortDescription,
+      tamilShortDescription,
       fullDescription,
+      tamilFullDescription,
       material,
       dimensions,
       weight,
@@ -302,11 +326,17 @@ export const createProduct = async (req, res, next) => {
 
     const product = await Product.create({
       name,
+      tamilName: tamilName || '',
+      nameTranslations: req.body.nameTranslations || {},
       slug,
       productCode: productCode.trim().toUpperCase(),
       category,
       shortDescription,
+      tamilShortDescription: tamilShortDescription || '',
+      shortDescriptionTranslations: req.body.shortDescriptionTranslations || {},
       fullDescription,
+      tamilFullDescription: tamilFullDescription || '',
+      fullDescriptionTranslations: req.body.fullDescriptionTranslations || {},
       material: material || 'Brass',
       dimensions,
       weight,

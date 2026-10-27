@@ -110,7 +110,7 @@ export const getAdminCategories = async (req, res, next) => {
  */
 export const createCategory = async (req, res, next) => {
   try {
-    const { name, description, image, iconName, displayOrder, isPrimary, isActive } = req.body;
+    const { name, tamilName, description, tamilDescription, image, iconName, displayOrder, isPrimary, isActive } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -128,8 +128,12 @@ export const createCategory = async (req, res, next) => {
 
     const category = await Category.create({
       name,
+      tamilName: tamilName || '',
+      nameTranslations: req.body.nameTranslations || {},
       slug,
       description,
+      tamilDescription: tamilDescription || '',
+      descriptionTranslations: req.body.descriptionTranslations || {},
       image,
       iconName: iconName || 'Sparkles',
       displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0,

@@ -44,6 +44,8 @@ export default {
         serif: ['"Cinzel"', '"Cormorant Garamond"', 'serif'],
         heading: ['"Cinzel Decorative"', '"Cinzel"', 'serif'],
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        tamil: ['"Anek Tamil"', '"Mukta Malar"', 'sans-serif'],
+        'tamil-serif': ['"Noto Serif Tamil"', '"Mukta Malar"', 'serif'],
       },
       boxShadow: {
         'temple': '0 10px 30px -10px rgba(74, 20, 36, 0.15)',

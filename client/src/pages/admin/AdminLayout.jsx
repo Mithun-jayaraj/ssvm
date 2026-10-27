@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -29,8 +29,7 @@ const AdminLayout = () => {
   }
 
   if (!isAuthenticated) {
-    navigate('/admin/login');
-    return null;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const handleLogout = async () => {
@@ -39,11 +38,11 @@ const AdminLayout = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Products Catalogue', path: '/admin/products', icon: Package },
-    { name: 'Categories', path: '/admin/categories', icon: Layers },
-    { name: 'Quotation Enquiries', path: '/admin/enquiries', icon: Inbox },
-    { name: 'Business Settings', path: '/admin/settings', icon: Settings },
+    { name: 'Dashboard', tamilName: 'டாஷ்போர்டு', path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Products Catalogue', tamilName: 'தயாரிப்புகள்', path: '/admin/products', icon: Package },
+    { name: 'Categories', tamilName: 'தயாரிப்பு வகைகள்', path: '/admin/categories', icon: Layers },
+    { name: 'Quotation Enquiries', tamilName: 'விலைப்புள்ளி விசாரணைகள்', path: '/admin/enquiries', icon: Inbox },
+    { name: 'Business Settings', tamilName: 'வணிக அமைப்புகள்', path: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -65,7 +64,7 @@ const AdminLayout = () => {
               SSVM ADMIN
             </span>
             <span className="text-[10px] text-[#EDE4D5]/70 block">
-              Tirupur Foundry Portal
+              நிர்வாக போர்டல் | Admin Portal
             </span>
           </div>
         </div>
@@ -87,7 +86,10 @@ const AdminLayout = () => {
                 }
               >
                 <Icon className="w-4 h-4 text-gold-500 shrink-0" />
-                <span>{item.name}</span>
+                <div>
+                  <span className="font-tamil font-bold block leading-tight">{item.tamilName}</span>
+                  <span className="text-[10px] opacity-80 block">{item.name}</span>
+                </div>
               </NavLink>
             );
           })}
